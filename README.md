@@ -12,7 +12,8 @@ stores only a JSON reference.
   `description`, custom fields (`cf`), dimensions, video/focal-point data.
 - **File usage endpoint** — `GET /api/kontainer/usage/:fileId` returns every
   entry referencing a Kontainer file id, across drafts, published versions and
-  locales. Authenticated with a regular Strapi API token.
+  locales — including fields inside (nested) components and dynamic zones.
+  Authenticated with a regular Strapi API token.
 
 ## Setup
 

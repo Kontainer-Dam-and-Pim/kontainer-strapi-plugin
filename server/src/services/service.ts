@@ -11,61 +11,111 @@ interface UsageEntry {
   status: "draft" | "published";
 }
 
-// True if the stored picker JSON references the given Kontainer file id.
-// Walks the value so both single-file and multi-file payloads match.
+type Attributes = Record<string, Record<string, unknown>>;
+
+// True if the value contains a Kontainer picker payload for the given file
+// id. Picker payloads always carry `fileId`, so plain entity/component `id`s
+// never false-positive. Handles single-file and multi-file payloads and
+// payloads nested in populated components/dynamic zones.
 const referencesFile = (value: unknown, fileId: string): boolean => {
   if (Array.isArray(value)) {
     return value.some((v) => referencesFile(v, fileId));
   }
   if (value && typeof value === "object") {
     const obj = value as Record<string, unknown>;
-    if (String(obj.fileId ?? obj.id ?? "") === fileId) return true;
+    if (obj.fileId !== undefined && String(obj.fileId) === fileId) return true;
     return Object.values(obj).some((v) => referencesFile(v, fileId));
   }
   return false;
 };
 
 const service = ({ strapi }: { strapi: Core.Strapi }) => ({
-  // All content-type attributes using the Kontainer custom field.
-  kontainerFields(): { uid: string; field: string }[] {
-    const fields: { uid: string; field: string }[] = [];
-    for (const [uid, contentType] of Object.entries(strapi.contentTypes)) {
-      if (!uid.startsWith("api::")) continue;
-      for (const [name, attr] of Object.entries(contentType.attributes)) {
-        if ((attr as { customField?: string }).customField === CUSTOM_FIELD) {
-          fields.push({ uid, field: name });
+  // Does this component (or any component nested in it) use the custom field?
+  componentHasKontainerField(uid: string, seen = new Set<string>()): boolean {
+    if (seen.has(uid)) return false;
+    seen.add(uid);
+    const attributes = (strapi.components[uid]?.attributes ?? {}) as Attributes;
+    return Object.values(attributes).some((attr) => {
+      if (attr.customField === CUSTOM_FIELD) return true;
+      if (attr.type === "component") {
+        return this.componentHasKontainerField(attr.component as string, seen);
+      }
+      if (attr.type === "dynamiczone") {
+        return (attr.components as string[]).some((c) =>
+          this.componentHasKontainerField(c, seen),
+        );
+      }
+      return false;
+    });
+  },
+
+  // Populate spec covering every path to a kontainer field inside a component.
+  populateForComponent(uid: string): true | { populate: Record<string, unknown> } {
+    const attributes = (strapi.components[uid]?.attributes ?? {}) as Attributes;
+    const inner = this.populateForAttributes(attributes);
+    return Object.keys(inner).length ? { populate: inner } : true;
+  },
+
+  populateForAttributes(attributes: Attributes): Record<string, unknown> {
+    const populate: Record<string, unknown> = {};
+    for (const [name, attr] of Object.entries(attributes)) {
+      if (
+        attr.type === "component" &&
+        this.componentHasKontainerField(attr.component as string)
+      ) {
+        populate[name] = this.populateForComponent(attr.component as string);
+      } else if (attr.type === "dynamiczone") {
+        const withField = (attr.components as string[]).filter((c) =>
+          this.componentHasKontainerField(c),
+        );
+        if (withField.length) {
+          populate[name] = {
+            on: Object.fromEntries(
+              withField.map((c) => [c, this.populateForComponent(c)]),
+            ),
+          };
         }
       }
     }
-    return fields;
+    return populate;
   },
 
   async findUsage(fileId: string): Promise<UsageEntry[]> {
     const usage: UsageEntry[] = [];
-    for (const { uid, field } of this.kontainerFields()) {
+    for (const [uid, contentType] of Object.entries(strapi.contentTypes)) {
+      if (!uid.startsWith("api::")) continue;
+      const attributes = contentType.attributes as Attributes;
+      const directFields = Object.entries(attributes)
+        .filter(([, attr]) => attr.customField === CUSTOM_FIELD)
+        .map(([name]) => name);
+      const populate = this.populateForAttributes(attributes);
+      const candidateFields = [...directFields, ...Object.keys(populate)];
+      if (!candidateFields.length) continue;
+
       for (const status of ["draft", "published"] as const) {
-        // ponytail: full scan of entries with a value; JSON-contains SQL per
-        // dialect if a customer ever has enough entries for this to hurt.
+        // ponytail: full scan of all entries; JSON-contains SQL per dialect
+        // if a customer ever has enough entries for this to hurt.
         const pageSize = 500;
         for (let start = 0; ; start += pageSize) {
           const entries = await strapi.documents(uid as any).findMany({
             status,
-            filters: { [field]: { $notNull: true } },
-            fields: [field] as any,
+            populate: populate as any,
             locale: "*",
             start,
             limit: pageSize,
           });
           for (const entry of entries) {
-            if (!referencesFile(entry[field], fileId)) continue;
-            usage.push({
-              contentType: uid,
-              field,
-              documentId: entry.documentId,
-              id: entry.id as number,
-              locale: (entry as { locale?: string }).locale ?? null,
-              status,
-            });
+            for (const field of candidateFields) {
+              if (!referencesFile(entry[field], fileId)) continue;
+              usage.push({
+                contentType: uid,
+                field,
+                documentId: entry.documentId,
+                id: entry.id as number,
+                locale: (entry as { locale?: string }).locale ?? null,
+                status,
+              });
+            }
           }
           if (entries.length < pageSize) break;
         }
