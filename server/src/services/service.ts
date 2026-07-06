@@ -1,6 +1,31 @@
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+
 import type { Core } from "@strapi/strapi";
 
 const CUSTOM_FIELD = "plugin::kontainer.media";
+
+// First response's Location header (no redirect following), 5s timeout.
+const fetchLocationHeader = (probeUrl: URL): Promise<string | undefined> =>
+  new Promise((resolve, reject) => {
+    const request = probeUrl.protocol === "https:" ? httpsRequest : httpRequest;
+    const req = request(
+      probeUrl,
+      {
+        method: "GET",
+        timeout: 5000,
+        // local dev instances use self-signed certificates
+        rejectUnauthorized: process.env.NODE_ENV === "production",
+      },
+      (res) => {
+        res.destroy();
+        resolve(res.headers.location);
+      },
+    );
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", reject);
+    req.end();
+  });
 
 export interface UsageEntry {
   contentType: string;
@@ -55,6 +80,31 @@ const service = ({ strapi }: { strapi: Core.Strapi }) => ({
 
   async setSettings(settings: { url: string }): Promise<void> {
     await this.settingsStore().set({ key: "settings", value: settings });
+  },
+
+  // Is the URL an actual Kontainer instance? The picker entry point
+  // (/?cmsMode=1) redirects to ?cmsContextId=<uuid> — a stable fingerprint
+  // that works unauthenticated.
+  async validateUrl(raw: string): Promise<{ valid: boolean; reason?: string }> {
+    let url: URL;
+    try {
+      url = new URL(raw);
+      if (url.protocol !== "https:" && url.protocol !== "http:") {
+        throw new Error("unsupported protocol");
+      }
+    } catch {
+      return { valid: false, reason: "invalid-url" };
+    }
+    try {
+      const location = await fetchLocationHeader(
+        new URL(`${url.protocol}//${url.host}/?cmsMode=1`),
+      );
+      return location?.includes("cmsContextId=")
+        ? { valid: true }
+        : { valid: false, reason: "not-kontainer" };
+    } catch {
+      return { valid: false, reason: "unreachable" };
+    }
   },
 
   // Does this component (or any component nested in it) use the custom field?

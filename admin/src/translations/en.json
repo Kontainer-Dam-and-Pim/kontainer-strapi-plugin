@@ -16,5 +16,10 @@
   "settings.url.hint-fallback": "Leave empty to use the value from config/plugins: {fileUrl}",
   "settings.save": "Save",
   "settings.saved": "Kontainer settings saved",
-  "settings.save-error": "Could not save — enter a valid http(s) URL"
+  "settings.save-error": "Could not save — enter a valid http(s) URL",
+  "settings.validation.checking": "Checking…",
+  "settings.validation.valid": "Kontainer instance detected",
+  "settings.validation.invalid-url": "Not a valid URL",
+  "settings.validation.not-kontainer": "This URL does not appear to be a Kontainer instance",
+  "settings.validation.unreachable": "The Strapi server could not reach this URL"
 }

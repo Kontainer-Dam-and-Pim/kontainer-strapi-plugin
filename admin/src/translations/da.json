@@ -16,5 +16,10 @@
   "settings.url.hint-fallback": "Lad stå tomt for at bruge værdien fra config/plugins: {fileUrl}",
   "settings.save": "Gem",
   "settings.saved": "Kontainer-indstillinger gemt",
-  "settings.save-error": "Kunne ikke gemme — angiv en gyldig http(s)-URL"
+  "settings.save-error": "Kunne ikke gemme — angiv en gyldig http(s)-URL",
+  "settings.validation.checking": "Kontrollerer…",
+  "settings.validation.valid": "Kontainer-instans fundet",
+  "settings.validation.invalid-url": "Ikke en gyldig URL",
+  "settings.validation.not-kontainer": "URL’en ser ikke ud til at være en Kontainer-instans",
+  "settings.validation.unreachable": "Strapi-serveren kunne ikke nå denne URL"
 }

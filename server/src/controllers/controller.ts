@@ -32,6 +32,14 @@ const controller = ({ strapi }: { strapi: Core.Strapi }) => ({
     ctx.body = await strapi.plugin("kontainer").service("service").getSettings();
   },
 
+  async validateSettings(ctx) {
+    const url = String(ctx.query.url ?? "");
+    if (!url) {
+      return ctx.badRequest("url query parameter is required");
+    }
+    ctx.body = await strapi.plugin("kontainer").service("service").validateUrl(url);
+  },
+
   async updateSettings(ctx) {
     const { url } = (ctx.request.body ?? {}) as { url?: unknown };
     if (typeof url !== "string" || (url !== "" && !isValidUrl(url))) {

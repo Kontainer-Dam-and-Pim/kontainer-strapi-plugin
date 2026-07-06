@@ -25,5 +25,13 @@ export default () => ({
         policies: ["admin::isAuthenticatedAdmin"],
       },
     },
+    {
+      method: "GET",
+      path: "/settings/validate",
+      handler: "controller.validateSettings",
+      config: {
+        policies: ["admin::isAuthenticatedAdmin"],
+      },
+    },
   ],
 });
