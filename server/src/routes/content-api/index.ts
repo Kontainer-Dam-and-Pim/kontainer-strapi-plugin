@@ -3,9 +3,8 @@ export default () => ({
   routes: [
     {
       method: "GET",
-      path: "/",
-      // name of the controller file & the method.
-      handler: "controller.index",
+      path: "/usage/:fileId",
+      handler: "controller.usage",
       config: {
         policies: [],
       },

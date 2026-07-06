@@ -7,15 +7,47 @@ import type { StrapiApp } from "@strapi/strapi/admin";
 
 const plugin: StrapiApp["appPlugins"][string] = {
   register(app) {
-    app.addMenuLink({
-      to: `plugins/${PLUGIN_ID}`,
+    app.customFields.register({
+      name: "media",
+      pluginId: PLUGIN_ID,
+      type: "json",
       icon: PluginIcon,
       intlLabel: {
-        id: `${PLUGIN_ID}.plugin.name`,
-        defaultMessage: PLUGIN_ID,
+        id: getTranslation("field.label"),
+        defaultMessage: "Kontainer media",
       },
-      Component: () => import("./pages/App"),
-      permissions: [],
+      intlDescription: {
+        id: getTranslation("field.description"),
+        defaultMessage: "Pick a file from Kontainer",
+      },
+      components: {
+        Input: async () => import("./components/KontainerMediaInput"),
+      },
+      options: {
+        advanced: [
+          {
+            sectionTitle: {
+              id: "global.settings",
+              defaultMessage: "Settings",
+            },
+            items: [
+              {
+                name: "required",
+                type: "checkbox",
+                intlLabel: {
+                  id: getTranslation("field.options.required"),
+                  defaultMessage: "Required field",
+                },
+                description: {
+                  id: getTranslation("field.options.required.description"),
+                  defaultMessage:
+                    "You won't be able to save an entry if this field is empty",
+                },
+              },
+            ],
+          },
+        ],
+      },
     });
 
     app.registerPlugin({

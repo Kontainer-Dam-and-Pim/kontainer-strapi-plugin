@@ -1,12 +1,22 @@
 import type { Core } from "@strapi/strapi";
 
 const controller = ({ strapi }: { strapi: Core.Strapi }) => ({
-  index(ctx) {
-    ctx.body = strapi
+  // Which entries reference a given Kontainer file id.
+  async usage(ctx) {
+    const { fileId } = ctx.params;
+    if (!fileId) {
+      return ctx.badRequest("fileId is required");
+    }
+    const data = await strapi
       .plugin("kontainer")
-      // the name of the service file & the method.
       .service("service")
-      .getWelcomeMessage();
+      .findUsage(String(fileId));
+    ctx.body = { fileId: String(fileId), count: data.length, data };
+  },
+
+  // Plugin config for the admin input component (picker URL).
+  config(ctx) {
+    ctx.body = { url: strapi.plugin("kontainer").config("url", "") };
   },
 });
 

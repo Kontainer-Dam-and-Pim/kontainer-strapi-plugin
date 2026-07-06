@@ -1,1 +1,11 @@
-{}
+{
+  "plugin.name": "Kontainer",
+  "field.label": "Kontainer media",
+  "field.description": "Pick a file from Kontainer",
+  "field.options.required": "Required field",
+  "field.options.required.description": "You won't be able to save an entry if this field is empty",
+  "input.choose": "Choose from Kontainer",
+  "input.replace": "Replace",
+  "input.remove": "Remove",
+  "input.not-configured": "Kontainer URL is not configured. Set it in config/plugins under kontainer.config.url."
+}
