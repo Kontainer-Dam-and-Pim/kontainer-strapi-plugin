@@ -39,35 +39,37 @@ yarn add strapi-plugin-kontainer
 
 ## Configuration
 
+Open **Settings → Kontainer → Configuration** in the admin panel and enter
+your Kontainer URL (e.g. `https://yourcompany.kontainer.com`). That's it — no
+code changes required.
+
+The plugin automatically extends the admin panel's Content-Security-Policy so
+thumbnails from `*.kontainer.com` (and any URL configured via file config)
+load in the editor.
+
+<details>
+<summary>Optional: configure via environment instead</summary>
+
+The admin-panel setting wins; this is a fallback for infrastructure-as-code
+setups:
+
 ```ts
 // config/plugins.ts
 export default ({ env }) => ({
   kontainer: {
     enabled: true,
     config: {
-      url: env('KONTAINER_URL', ''), // e.g. https://yourcompany.kontainer.com
+      url: env('KONTAINER_URL', ''),
     },
   },
 });
 ```
 
-Allow Kontainer thumbnails through the admin panel's CSP:
+If you use a custom (non-`kontainer.com`) domain configured only through the
+admin panel, add it to `img-src`/`media-src` in `config/middlewares.ts` — the
+plugin logs a warning at startup when this applies.
 
-```ts
-// config/middlewares.ts
-{
-  name: 'strapi::security',
-  config: {
-    contentSecurityPolicy: {
-      useDefaults: true,
-      directives: {
-        'img-src': ["'self'", 'data:', 'blob:', 'https://market-assets.strapi.io', 'https://*.kontainer.com'],
-        'media-src': ["'self'", 'data:', 'blob:', 'https://*.kontainer.com'],
-      },
-    },
-  },
-},
-```
+</details>
 
 ## Usage
 

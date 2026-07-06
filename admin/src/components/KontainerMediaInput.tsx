@@ -184,7 +184,7 @@ const KontainerMediaInput = React.forwardRef<HTMLButtonElement, InputProps>(
             {formatMessage({
               id: getTranslation("input.not-configured"),
               defaultMessage:
-                "Kontainer URL is not configured. Set it in config/plugins under kontainer.config.url.",
+                "Kontainer URL is not configured. Set it under Settings → Kontainer.",
             })}
           </Typography>
         )}

@@ -30,6 +30,33 @@ const referencesFile = (value: unknown, fileId: string): boolean => {
 };
 
 const service = ({ strapi }: { strapi: Core.Strapi }) => ({
+  settingsStore() {
+    return strapi.store({ type: "plugin", name: "kontainer" });
+  },
+
+  // Admin-panel setting wins; config/plugins (env) is the fallback.
+  async getUrl(): Promise<string> {
+    const stored = (await this.settingsStore().get({ key: "settings" })) as {
+      url?: string;
+    } | null;
+    const url = stored?.url || (strapi.plugin("kontainer").config("url", "") as string);
+    return url.replace(/\/+$/, "");
+  },
+
+  async getSettings(): Promise<{ url: string; fileUrl: string }> {
+    const stored = (await this.settingsStore().get({ key: "settings" })) as {
+      url?: string;
+    } | null;
+    return {
+      url: stored?.url ?? "",
+      fileUrl: strapi.plugin("kontainer").config("url", "") as string,
+    };
+  },
+
+  async setSettings(settings: { url: string }): Promise<void> {
+    await this.settingsStore().set({ key: "settings", value: settings });
+  },
+
   // Does this component (or any component nested in it) use the custom field?
   componentHasKontainerField(uid: string, seen = new Set<string>()): boolean {
     if (seen.has(uid)) return false;

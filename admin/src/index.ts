@@ -50,6 +50,28 @@ const plugin: StrapiApp["appPlugins"][string] = {
       },
     });
 
+    app.createSettingSection(
+      {
+        id: PLUGIN_ID,
+        intlLabel: {
+          id: getTranslation("settings.section"),
+          defaultMessage: "Kontainer",
+        },
+      },
+      [
+        {
+          intlLabel: {
+            id: getTranslation("settings.link"),
+            defaultMessage: "Configuration",
+          },
+          id: `${PLUGIN_ID}-settings`,
+          to: `plugins/${PLUGIN_ID}`,
+          Component: () => import("./pages/Settings"),
+          permissions: [],
+        },
+      ],
+    );
+
     app.registerPlugin({
       id: PLUGIN_ID,
       initializer: Initializer,

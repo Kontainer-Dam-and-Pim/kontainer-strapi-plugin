@@ -6,7 +6,23 @@ export default () => ({
       path: "/config",
       handler: "controller.config",
       config: {
-        policies: [],
+        policies: ["admin::isAuthenticatedAdmin"],
+      },
+    },
+    {
+      method: "GET",
+      path: "/settings",
+      handler: "controller.getSettings",
+      config: {
+        policies: ["admin::isAuthenticatedAdmin"],
+      },
+    },
+    {
+      method: "PUT",
+      path: "/settings",
+      handler: "controller.updateSettings",
+      config: {
+        policies: ["admin::isAuthenticatedAdmin"],
       },
     },
   ],

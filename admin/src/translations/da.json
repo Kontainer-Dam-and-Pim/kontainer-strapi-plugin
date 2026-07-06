@@ -7,5 +7,14 @@
   "input.choose": "Vælg fra Kontainer",
   "input.replace": "Erstat",
   "input.remove": "Fjern",
-  "input.not-configured": "Kontainer-URL er ikke konfigureret. Sæt den i config/plugins under kontainer.config.url."
+  "input.not-configured": "Kontainer-URL er ikke konfigureret. Sæt den under Indstillinger → Kontainer.",
+  "settings.section": "Kontainer",
+  "settings.link": "Konfiguration",
+  "settings.subtitle": "Forbind Strapi til din Kontainer DAM. Redaktører vælger filer fra denne Kontainer i editoren.",
+  "settings.url.label": "Kontainer-URL",
+  "settings.url.hint": "Eksempel: https://ditfirma.kontainer.com",
+  "settings.url.hint-fallback": "Lad stå tomt for at bruge værdien fra config/plugins: {fileUrl}",
+  "settings.save": "Gem",
+  "settings.saved": "Kontainer-indstillinger gemt",
+  "settings.save-error": "Kunne ikke gemme — angiv en gyldig http(s)-URL"
 }

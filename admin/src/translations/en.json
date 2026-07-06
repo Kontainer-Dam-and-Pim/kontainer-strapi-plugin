@@ -7,5 +7,14 @@
   "input.choose": "Choose from Kontainer",
   "input.replace": "Replace",
   "input.remove": "Remove",
-  "input.not-configured": "Kontainer URL is not configured. Set it in config/plugins under kontainer.config.url."
+  "input.not-configured": "Kontainer URL is not configured. Set it under Settings → Kontainer.",
+  "settings.section": "Kontainer",
+  "settings.link": "Configuration",
+  "settings.subtitle": "Connect Strapi to your Kontainer DAM. Editors pick files from this Kontainer in the content editor.",
+  "settings.url.label": "Kontainer URL",
+  "settings.url.hint": "Example: https://yourcompany.kontainer.com",
+  "settings.url.hint-fallback": "Leave empty to use the value from config/plugins: {fileUrl}",
+  "settings.save": "Save",
+  "settings.saved": "Kontainer settings saved",
+  "settings.save-error": "Could not save — enter a valid http(s) URL"
 }
