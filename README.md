@@ -1,36 +1,60 @@
-# Kontainer Strapi plugin
+# Strapi plugin: Kontainer DAM
 
-Kontainer DAM integration for Strapi 5. Assets stay in Kontainer — Strapi
-stores only a JSON reference.
+[Kontainer](https://kontainer.com) integration for **Strapi 5**. Content
+editors pick images, videos and files straight from your Kontainer DAM inside
+the Strapi editor — Strapi stores only a JSON reference to the asset, never
+the file. Kontainer stays the single source of truth.
 
-## What it provides
+## Features
 
-- **`kontainer.media` custom field** — editors pick files from the Kontainer
-  file picker (popup, `?cmsMode=1`). The picker's JSON payload is stored
-  verbatim on the entry: `fileId`, CDN `url` (incl. `?d=<downloadTemplateId>`
-  when a download template is chosen in the picker), `thumbnailUrl`, `alt`,
-  `description`, custom fields (`cf`), dimensions, video/focal-point data.
-- **File usage endpoint** — `GET /api/kontainer/usage/:fileId` returns every
-  entry referencing a Kontainer file id, across drafts, published versions and
-  locales — including fields inside (nested) components and dynamic zones.
-  Authenticated with a regular Strapi API token.
+- **`kontainer.media` custom field** — a "Choose from Kontainer" button on any
+  content type opens the Kontainer file picker. Selecting a file stores its
+  reference on the entry:
+  - `fileId`, `fileName`, `folderId` — identifiers for retrieving the asset
+  - `url` — CDN URL, including the chosen **download template**
+    (`?d=<templateId>`), plus `urlBaseName` and `originalUrl`
+  - `thumbnailUrl`, `type`, `extension`, dimensions and size
+  - **all texts**: `alt`, `description` and every Kontainer custom field
+    (`cf`) — stored in the JSON alongside the reference
+- **Download templates** — editors apply crop/resize/format templates directly
+  in the picker; the resulting CDN URL and template id are stored.
+- **File usage endpoint** — `GET /api/kontainer/usage/:fileId` reports every
+  entry referencing a Kontainer file, across drafts, published versions,
+  locales, components and dynamic zones. Lets Kontainer show where a file is
+  used before it is changed or deleted.
+- **No duplication** — nothing is uploaded to the Strapi media library.
 
-## Setup
+## Requirements
+
+- Strapi v5 (built and tested on 5.x with the Plugin SDK)
+- A Kontainer account (`https://yourcompany.kontainer.com`)
+
+## Installation
+
+```sh
+npm install strapi-plugin-kontainer
+# or
+yarn add strapi-plugin-kontainer
+```
+
+## Configuration
 
 ```ts
 // config/plugins.ts
-kontainer: {
-  enabled: true,
-  resolve: './src/plugins/kontainer', // omit when installed from npm
-  config: {
-    url: env('KONTAINER_URL', ''), // e.g. https://yourcompany.kontainer.com
+export default ({ env }) => ({
+  kontainer: {
+    enabled: true,
+    config: {
+      url: env('KONTAINER_URL', ''), // e.g. https://yourcompany.kontainer.com
+    },
   },
-},
+});
 ```
 
-Allow Kontainer thumbnails through the admin CSP (`config/middlewares.ts`):
+Allow Kontainer thumbnails through the admin panel's CSP:
 
 ```ts
+// config/middlewares.ts
 {
   name: 'strapi::security',
   config: {
@@ -45,7 +69,12 @@ Allow Kontainer thumbnails through the admin CSP (`config/middlewares.ts`):
 },
 ```
 
-Add the field to a content type:
+## Usage
+
+### Add the field to a content type
+
+In the Content-Type Builder choose **Custom fields → Kontainer media**, or add
+it to the schema directly:
 
 ```json
 "hero": {
@@ -54,24 +83,45 @@ Add the field to a content type:
 }
 ```
 
-The stored value is returned as-is by the Strapi content API, so a frontend
-reads `entry.hero.url` / `entry.hero.alt` and requests the asset from
-Kontainer's CDN directly.
+### Consume from your frontend
 
-## Usage endpoint
+The stored reference is returned as-is by the Strapi content API:
+
+```ts
+const page = await fetch(`${STRAPI_URL}/api/pages/${documentId}`).then((r) => r.json());
+const { url, alt } = page.data.hero; // request the asset from Kontainer's CDN
+```
+
+### File usage
 
 ```
 GET /api/kontainer/usage/:fileId
 Authorization: Bearer <strapi api token>
 
-{ "fileId": "123456", "count": 1, "data": [
-  { "contentType": "api::page.page", "field": "hero",
-    "documentId": "...", "id": 1, "locale": null, "status": "published" }
-] }
+{
+  "fileId": "5764",
+  "count": 1,
+  "data": [
+    {
+      "contentType": "api::page.page",
+      "field": "hero",
+      "documentId": "m3q2h...",
+      "id": 1,
+      "locale": null,
+      "status": "published"
+    }
+  ]
+}
 ```
 
 ## Development
 
-Lives as a git submodule in the demo app (`kontainer-cms-strapi`), registered
-via `resolve`. `npm run watch` rebuilds on change; the demo app's docker
-compose runs it automatically.
+```sh
+npm install
+npm run watch   # rebuild on change
+npm run verify  # validate the package before publishing
+```
+
+## License
+
+[MIT](./LICENSE) © Kontainer

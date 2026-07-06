@@ -2,7 +2,7 @@ import type { Core } from "@strapi/strapi";
 
 const CUSTOM_FIELD = "plugin::kontainer.media";
 
-interface UsageEntry {
+export interface UsageEntry {
   contentType: string;
   field: string;
   documentId: string;

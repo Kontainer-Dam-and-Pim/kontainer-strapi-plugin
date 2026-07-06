@@ -1,6 +1,17 @@
 {
-  "version": "0.0.0",
-  "keywords": [],
+  "version": "0.1.0",
+  "keywords": [
+    "strapi",
+    "strapi-plugin",
+    "plugin",
+    "kontainer",
+    "dam",
+    "digital-asset-management",
+    "media",
+    "cdn",
+    "file-picker",
+    "custom-field"
+  ],
   "type": "commonjs",
   "exports": {
     "./package.json": "./package.json",
@@ -19,7 +30,9 @@
       "default": "./dist/server/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "strapi-plugin build",
     "watch": "strapi-plugin watch",
@@ -59,11 +72,19 @@
   "strapi": {
     "kind": "plugin",
     "name": "kontainer",
-    "displayName": "Kontainer",
-    "description": "Kontainer DAM demo plugin"
+    "displayName": "Kontainer DAM",
+    "description": "Pick assets from Kontainer and store CDN references \u2014 Kontainer stays the single source of truth."
   },
-  "name": "kontainer",
-  "description": "Kontainer DAM demo plugin",
+  "name": "strapi-plugin-kontainer",
+  "description": "Kontainer DAM integration for Strapi 5 \u2014 pick assets from Kontainer, store CDN references only, track file usage.",
   "license": "MIT",
-  "author": ""
+  "author": "Kontainer <support@kontainer.com> (https://kontainer.com)",
+  "homepage": "https://kontainer.com/integrations",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.konform.com:7999/konform/kontainer-plugin-strapi.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

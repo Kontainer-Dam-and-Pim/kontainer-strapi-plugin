@@ -1,0 +1,11 @@
+{
+  "plugin.name": "Kontainer",
+  "field.label": "Kontainer medie",
+  "field.description": "Vælg en fil fra Kontainer",
+  "field.options.required": "Obligatorisk felt",
+  "field.options.required.description": "Du kan ikke gemme et indlæg, hvis dette felt er tomt",
+  "input.choose": "Vælg fra Kontainer",
+  "input.replace": "Erstat",
+  "input.remove": "Fjern",
+  "input.not-configured": "Kontainer-URL er ikke konfigureret. Sæt den i config/plugins under kontainer.config.url."
+}
