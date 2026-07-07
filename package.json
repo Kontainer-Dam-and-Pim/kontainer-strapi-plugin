@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": [
     "strapi",
     "strapi-plugin",
@@ -74,10 +74,10 @@
     "kind": "plugin",
     "name": "kontainer",
     "displayName": "Kontainer DAM",
-    "description": "Pick assets from Kontainer and store CDN references \u2014 Kontainer stays the single source of truth."
+    "description": "Pick assets from Kontainer and store CDN references — Kontainer stays the single source of truth."
   },
   "name": "@kontainer/strapi-plugin",
-  "description": "Kontainer DAM integration for Strapi 5 \u2014 pick assets from Kontainer, store CDN references only, track file usage.",
+  "description": "Kontainer DAM integration for Strapi 5 — pick assets from Kontainer, store CDN references only, track file usage.",
   "license": "MIT",
   "author": "Kontainer <support@kontainer.com> (https://kontainer.com)",
   "homepage": "https://kontainer.com/integrations",
