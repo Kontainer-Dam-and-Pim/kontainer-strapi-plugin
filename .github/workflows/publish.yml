@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+      # OIDC trusted publishing needs npm >= 11.5.1; node 20 ships ~10.x.
+      - run: npm install -g npm@latest
       - run: npm ci
       # prepublishOnly runs the build; dist is what gets published.
       # Auth via OIDC trusted publishing (no token); provenance is automatic.
