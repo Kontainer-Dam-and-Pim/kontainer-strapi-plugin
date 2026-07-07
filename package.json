@@ -76,7 +76,7 @@
     "displayName": "Kontainer DAM",
     "description": "Pick assets from Kontainer and store CDN references \u2014 Kontainer stays the single source of truth."
   },
-  "name": "strapi-plugin-kontainer",
+  "name": "@kontainer/strapi-plugin",
   "description": "Kontainer DAM integration for Strapi 5 \u2014 pick assets from Kontainer, store CDN references only, track file usage.",
   "license": "MIT",
   "author": "Kontainer <support@kontainer.com> (https://kontainer.com)",

@@ -32,9 +32,9 @@ the file. Kontainer stays the single source of truth.
 ## Installation
 
 ```sh
-npm install strapi-plugin-kontainer
+npm install @kontainer/strapi-plugin
 # or
-yarn add strapi-plugin-kontainer
+yarn add @kontainer/strapi-plugin
 ```
 
 ## Configuration
