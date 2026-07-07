@@ -83,7 +83,10 @@
   "homepage": "https://kontainer.com/integrations",
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.konform.com:7999/konform/kontainer-plugin-strapi.git"
+    "url": "git+https://github.com/Kontainer-Dam-and-Pim/kontainer-strapi-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kontainer-Dam-and-Pim/kontainer-strapi-plugin/issues"
   },
   "engines": {
     "node": ">=18.0.0"
