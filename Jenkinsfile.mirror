@@ -1,13 +1,18 @@
 // Mirrors this Bitbucket repo to the public GitHub repo on every push.
 // Wire a Jenkins Pipeline job at this file, triggered by a Bitbucket
-// webhook (or pollSCM as fallback). Needs an SSH credential 'github-mirror'
-// with push access to the GitHub repo.
+// webhook (or pollSCM as fallback).
+//
+// Credential 'github-mirror' = Username/Password:
+//   username = a GitHub user with write on the repo
+//   password = a CLASSIC PAT with scopes `repo` + `workflow` (no expiry).
+// The `workflow` scope is REQUIRED — GitHub refuses pushes that touch
+// .github/workflows/ without it (and deploy keys can't carry it).
 pipeline {
   agent any
   triggers { pollSCM('H/5 * * * *') } // fallback if the Bitbucket webhook misses
   options { disableConcurrentBuilds() }
   environment {
-    GITHUB = 'git@github.com:Kontainer-Dam-and-Pim/kontainer-strapi-plugin.git'
+    GH = 'github.com/Kontainer-Dam-and-Pim/kontainer-strapi-plugin.git'
   }
   stages {
     stage('Mirror to GitHub') {
@@ -15,10 +20,12 @@ pipeline {
         // Fetch ALL heads + tags locally first — a single-branch workspace
         // must not push --mirror or it would delete GitHub's other refs.
         sh 'git fetch origin --prune "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"'
-        sshagent(['github-mirror']) {
+        withCredentials([usernamePassword(credentialsId: 'github-mirror',
+              usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
           sh '''
+            set +x  # keep the token out of the log
             git remote remove github 2>/dev/null || true
-            git remote add github "$GITHUB"
+            git remote add github "https://${GH_USER}:${GH_TOKEN}@${GH}"
             git push github --prune "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
           '''
         }
