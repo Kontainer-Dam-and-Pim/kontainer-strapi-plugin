@@ -1,0 +1,28 @@
+// Mirrors this Bitbucket repo to the public GitHub repo on every push.
+// Wire a Jenkins Pipeline job at this file, triggered by a Bitbucket
+// webhook (or pollSCM as fallback). Needs an SSH credential 'github-mirror'
+// with push access to the GitHub repo.
+pipeline {
+  agent any
+  triggers { pollSCM('H/5 * * * *') } // fallback if the Bitbucket webhook misses
+  options { disableConcurrentBuilds() }
+  environment {
+    GITHUB = 'git@github.com:Kontainer-Dam-and-Pim/kontainer-strapi-plugin.git'
+  }
+  stages {
+    stage('Mirror to GitHub') {
+      steps {
+        // Fetch ALL heads + tags locally first — a single-branch workspace
+        // must not push --mirror or it would delete GitHub's other refs.
+        sh 'git fetch origin --prune "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"'
+        sshagent(['github-mirror']) {
+          sh '''
+            git remote remove github 2>/dev/null || true
+            git remote add github "$GITHUB"
+            git push github --prune "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+          '''
+        }
+      }
+    }
+  }
+}
