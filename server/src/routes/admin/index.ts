@@ -1,36 +1,36 @@
 export default () => ({
-  type: "admin",
+  type: 'admin',
   routes: [
     {
-      method: "GET",
-      path: "/config",
-      handler: "controller.config",
+      method: 'GET',
+      path: '/config',
+      handler: 'controller.config',
       config: {
-        policies: ["admin::isAuthenticatedAdmin"],
+        policies: ['admin::isAuthenticatedAdmin'],
       },
     },
     {
-      method: "GET",
-      path: "/settings",
-      handler: "controller.getSettings",
+      method: 'GET',
+      path: '/settings',
+      handler: 'controller.getSettings',
       config: {
-        policies: ["admin::isAuthenticatedAdmin"],
+        policies: ['admin::isAuthenticatedAdmin'],
       },
     },
     {
-      method: "PUT",
-      path: "/settings",
-      handler: "controller.updateSettings",
+      method: 'PUT',
+      path: '/settings',
+      handler: 'controller.updateSettings',
       config: {
-        policies: ["admin::isAuthenticatedAdmin"],
+        policies: ['admin::isAuthenticatedAdmin'],
       },
     },
     {
-      method: "GET",
-      path: "/settings/validate",
-      handler: "controller.validateSettings",
+      method: 'GET',
+      path: '/settings/validate',
+      handler: 'controller.validateSettings',
       config: {
-        policies: ["admin::isAuthenticatedAdmin"],
+        policies: ['admin::isAuthenticatedAdmin'],
       },
     },
   ],

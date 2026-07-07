@@ -1,15 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 
-import { Box, Button, Field, Flex, TextInput, Typography } from "@strapi/design-system";
-import { Check } from "@strapi/icons";
-import { useFetchClient, useNotification } from "@strapi/strapi/admin";
-import { useIntl } from "react-intl";
+import { Box, Button, Field, Flex, TextInput, Typography } from '@strapi/design-system';
+import { Check } from '@strapi/icons';
+import { useFetchClient, useNotification } from '@strapi/strapi/admin';
+import { useIntl } from 'react-intl';
 
-import { getTranslation } from "../utils/getTranslation";
+import { getTranslation } from '../utils/getTranslation';
 
-type Validation =
-  | { status: "idle" | "checking" | "valid" }
-  | { status: "invalid"; reason: string };
+type Validation = { status: 'idle' | 'checking' | 'valid' } | { status: 'invalid'; reason: string };
 
 const VALIDATION_DEBOUNCE_MS = 500;
 
@@ -17,15 +15,15 @@ const Settings = () => {
   const { formatMessage } = useIntl();
   const { get, put } = useFetchClient();
   const { toggleNotification } = useNotification();
-  const [url, setUrl] = React.useState("");
-  const [fileUrl, setFileUrl] = React.useState("");
+  const [url, setUrl] = React.useState('');
+  const [fileUrl, setFileUrl] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
-  const [validation, setValidation] = React.useState<Validation>({ status: "idle" });
+  const [validation, setValidation] = React.useState<Validation>({ status: 'idle' });
   const validationSeq = React.useRef(0);
 
   React.useEffect(() => {
-    get("/kontainer/settings")
+    get('/kontainer/settings')
       .then(({ data }: { data: { url: string; fileUrl: string } }) => {
         setUrl(data.url);
         setFileUrl(data.fileUrl);
@@ -40,23 +38,23 @@ const Settings = () => {
     const seq = ++validationSeq.current;
     const trimmed = url.trim();
     if (!trimmed) {
-      setValidation({ status: "idle" });
+      setValidation({ status: 'idle' });
       return;
     }
-    setValidation({ status: "checking" });
+    setValidation({ status: 'checking' });
     const timer = setTimeout(() => {
-      get("/kontainer/settings/validate", { params: { url: trimmed } })
+      get('/kontainer/settings/validate', { params: { url: trimmed } })
         .then(({ data }: { data: { valid: boolean; reason?: string } }) => {
           if (seq !== validationSeq.current) return; // stale response
           setValidation(
             data.valid
-              ? { status: "valid" }
-              : { status: "invalid", reason: data.reason ?? "invalid-url" },
+              ? { status: 'valid' }
+              : { status: 'invalid', reason: data.reason ?? 'invalid-url' }
           );
         })
         .catch(() => {
           if (seq !== validationSeq.current) return;
-          setValidation({ status: "invalid", reason: "unreachable" });
+          setValidation({ status: 'invalid', reason: 'unreachable' });
         });
     }, VALIDATION_DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -65,20 +63,20 @@ const Settings = () => {
   const save = async () => {
     setSaving(true);
     try {
-      await put("/kontainer/settings", { url: url.trim() });
+      await put('/kontainer/settings', { url: url.trim() });
       toggleNotification({
-        type: "success",
+        type: 'success',
         message: formatMessage({
-          id: getTranslation("settings.saved"),
-          defaultMessage: "Kontainer settings saved",
+          id: getTranslation('settings.saved'),
+          defaultMessage: 'Kontainer settings saved',
         }),
       });
     } catch {
       toggleNotification({
-        type: "danger",
+        type: 'danger',
         message: formatMessage({
-          id: getTranslation("settings.save-error"),
-          defaultMessage: "Could not save — enter a valid http(s) URL",
+          id: getTranslation('settings.save-error'),
+          defaultMessage: 'Could not save — enter a valid http(s) URL',
         }),
       });
     } finally {
@@ -90,11 +88,11 @@ const Settings = () => {
     formatMessage({
       id: getTranslation(`settings.validation.${reason}`),
       defaultMessage:
-        reason === "not-kontainer"
-          ? "This URL does not appear to be a Kontainer instance"
-          : reason === "unreachable"
-            ? "The Strapi server could not reach this URL"
-            : "Not a valid URL",
+        reason === 'not-kontainer'
+          ? 'This URL does not appear to be a Kontainer instance'
+          : reason === 'unreachable'
+            ? 'The Strapi server could not reach this URL'
+            : 'Not a valid URL',
     });
 
   return (
@@ -106,38 +104,35 @@ const Settings = () => {
           </Typography>
           <Typography variant="epsilon" textColor="neutral600">
             {formatMessage({
-              id: getTranslation("settings.subtitle"),
+              id: getTranslation('settings.subtitle'),
               defaultMessage:
-                "Connect Strapi to your Kontainer DAM. Editors pick files from this Kontainer in the content editor.",
+                'Connect Strapi to your Kontainer DAM. Editors pick files from this Kontainer in the content editor.',
             })}
           </Typography>
         </Flex>
         <Field.Root
           name="kontainer-url"
-          error={
-            validation.status === "invalid" ? invalidMessage(validation.reason) : undefined
-          }
+          error={validation.status === 'invalid' ? invalidMessage(validation.reason) : undefined}
           hint={
             fileUrl
               ? formatMessage(
                   {
-                    id: getTranslation("settings.url.hint-fallback"),
-                    defaultMessage:
-                      "Leave empty to use the value from config/plugins: {fileUrl}",
+                    id: getTranslation('settings.url.hint-fallback'),
+                    defaultMessage: 'Leave empty to use the value from config/plugins: {fileUrl}',
                   },
-                  { fileUrl },
+                  { fileUrl }
                 )
               : formatMessage({
-                  id: getTranslation("settings.url.hint"),
-                  defaultMessage: "Example: https://yourcompany.kontainer.com",
+                  id: getTranslation('settings.url.hint'),
+                  defaultMessage: 'Example: https://yourcompany.kontainer.com',
                 })
           }
-          style={{ width: "100%" }}
+          style={{ width: '100%' }}
         >
           <Field.Label>
             {formatMessage({
-              id: getTranslation("settings.url.label"),
-              defaultMessage: "Kontainer URL",
+              id: getTranslation('settings.url.label'),
+              defaultMessage: 'Kontainer URL',
             })}
           </Field.Label>
           <TextInput
@@ -146,19 +141,19 @@ const Settings = () => {
             disabled={loading}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
           />
-          {validation.status === "checking" && (
+          {validation.status === 'checking' && (
             <Typography variant="pi" textColor="neutral600">
               {formatMessage({
-                id: getTranslation("settings.validation.checking"),
-                defaultMessage: "Checking…",
+                id: getTranslation('settings.validation.checking'),
+                defaultMessage: 'Checking…',
               })}
             </Typography>
           )}
-          {validation.status === "valid" && (
+          {validation.status === 'valid' && (
             <Typography variant="pi" textColor="success600">
               {formatMessage({
-                id: getTranslation("settings.validation.valid"),
-                defaultMessage: "Kontainer instance detected",
+                id: getTranslation('settings.validation.valid'),
+                defaultMessage: 'Kontainer instance detected',
               })}
             </Typography>
           )}
@@ -167,8 +162,8 @@ const Settings = () => {
         </Field.Root>
         <Button onClick={save} loading={saving} disabled={loading} startIcon={<Check />}>
           {formatMessage({
-            id: getTranslation("settings.save"),
-            defaultMessage: "Save",
+            id: getTranslation('settings.save'),
+            defaultMessage: 'Save',
           })}
         </Button>
       </Flex>

@@ -1,1 +1,1 @@
-export const PLUGIN_ID = "kontainer";
+export const PLUGIN_ID = 'kontainer';

@@ -1,47 +1,46 @@
-import { getTranslation } from "./utils/getTranslation";
-import { PLUGIN_ID } from "./pluginId";
-import { Initializer } from "./components/Initializer";
-import { PluginIcon } from "./components/PluginIcon";
+import { getTranslation } from './utils/getTranslation';
+import { PLUGIN_ID } from './pluginId';
+import { Initializer } from './components/Initializer';
+import { PluginIcon } from './components/PluginIcon';
 
-import type { StrapiApp } from "@strapi/strapi/admin";
+import type { StrapiApp } from '@strapi/strapi/admin';
 
-const plugin: StrapiApp["appPlugins"][string] = {
+const plugin: StrapiApp['appPlugins'][string] = {
   register(app) {
     app.customFields.register({
-      name: "media",
+      name: 'media',
       pluginId: PLUGIN_ID,
-      type: "json",
+      type: 'json',
       icon: PluginIcon,
       intlLabel: {
-        id: getTranslation("field.label"),
-        defaultMessage: "Kontainer media",
+        id: getTranslation('field.label'),
+        defaultMessage: 'Kontainer media',
       },
       intlDescription: {
-        id: getTranslation("field.description"),
-        defaultMessage: "Pick a file from Kontainer",
+        id: getTranslation('field.description'),
+        defaultMessage: 'Pick a file from Kontainer',
       },
       components: {
-        Input: async () => import("./components/KontainerMediaInput"),
+        Input: async () => import('./components/KontainerMediaInput'),
       },
       options: {
         advanced: [
           {
             sectionTitle: {
-              id: "global.settings",
-              defaultMessage: "Settings",
+              id: 'global.settings',
+              defaultMessage: 'Settings',
             },
             items: [
               {
-                name: "required",
-                type: "checkbox",
+                name: 'required',
+                type: 'checkbox',
                 intlLabel: {
-                  id: getTranslation("field.options.required"),
-                  defaultMessage: "Required field",
+                  id: getTranslation('field.options.required'),
+                  defaultMessage: 'Required field',
                 },
                 description: {
-                  id: getTranslation("field.options.required.description"),
-                  defaultMessage:
-                    "You won't be able to save an entry if this field is empty",
+                  id: getTranslation('field.options.required.description'),
+                  defaultMessage: "You won't be able to save an entry if this field is empty",
                 },
               },
             ],
@@ -54,22 +53,22 @@ const plugin: StrapiApp["appPlugins"][string] = {
       {
         id: PLUGIN_ID,
         intlLabel: {
-          id: getTranslation("settings.section"),
-          defaultMessage: "Kontainer",
+          id: getTranslation('settings.section'),
+          defaultMessage: 'Kontainer',
         },
       },
       [
         {
           intlLabel: {
-            id: getTranslation("settings.link"),
-            defaultMessage: "Configuration",
+            id: getTranslation('settings.link'),
+            defaultMessage: 'Configuration',
           },
           id: `${PLUGIN_ID}-settings`,
           to: `plugins/${PLUGIN_ID}`,
-          Component: () => import("./pages/Settings"),
+          Component: () => import('./pages/Settings'),
           permissions: [],
         },
-      ],
+      ]
     );
 
     app.registerPlugin({
@@ -84,9 +83,7 @@ const plugin: StrapiApp["appPlugins"][string] = {
     return Promise.all(
       locales.map(async (locale) => {
         try {
-          const { default: data } = (await import(
-            `./translations/${locale}.json`
-          )) as {
+          const { default: data } = (await import(`./translations/${locale}.json`)) as {
             default: Record<string, string>;
           };
 
@@ -101,7 +98,7 @@ const plugin: StrapiApp["appPlugins"][string] = {
         } catch {
           return { data: {}, locale };
         }
-      }),
+      })
     );
   },
 };

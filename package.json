@@ -40,7 +40,13 @@
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "test:ts:front": "tsc -p admin/tsconfig.json --noEmit",
-    "test:ts:back": "tsc -p server/tsconfig.json --noEmit"
+    "test:ts:back": "tsc -p server/tsconfig.json --noEmit",
+    "lint": "prettier --check . && npm run test:ts:front && npm run test:ts:back",
+    "preversion": "npm run lint && npm run build && npm run verify",
+    "postversion": "git push --follow-tags",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major"
   },
   "dependencies": {},
   "devDependencies": {
