@@ -229,24 +229,19 @@ const Settings = () => {
           hint={formatMessage({
             id: getTranslation('settings.usage.token.hint'),
             defaultMessage:
-              'Bearer token Kontainer must send. Use the same value on the Kontainer integration. Leave empty to disable the endpoint.',
+              'Generate a token, Save, then paste it into the Kontainer integration. Without a token the endpoint is disabled.',
           })}
           style={{ width: '100%' }}
         >
           <Field.Label>
             {formatMessage({
               id: getTranslation('settings.usage.token.label'),
-              defaultMessage: 'Usage endpoint token',
+              defaultMessage: 'Access token',
             })}
           </Field.Label>
           <Flex gap={2} width="100%">
             <Box flex="1">
-              <TextInput
-                placeholder="a long random secret"
-                value={token}
-                disabled={loading}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value)}
-              />
+              <TextInput value={token} aria-readonly readOnly disabled={loading} />
             </Box>
             <Button
               variant="secondary"
