@@ -36,6 +36,14 @@ export interface UsageEntry {
   status: 'draft' | 'published';
 }
 
+// Shape Kontainer's "external reference" integration expects (one row per
+// file-in-a-place). See the plugin README / Kontainer settings docs.
+export interface FileUsage {
+  kontainerFileId: number;
+  url: string;
+  title: string;
+}
+
 type Attributes = Record<string, Record<string, unknown>>;
 
 // True if the value contains a Kontainer picker payload for the given file
@@ -54,6 +62,34 @@ const referencesFile = (value: unknown, fileId: string): boolean => {
   return false;
 };
 
+// Collect every Kontainer file id referenced anywhere in a value. Picker
+// payloads always carry `fileId`; entity/component `id`s never do, so this
+// won't false-positive. Mirrors referencesFile but gathers all ids.
+const collectFileIds = (value: unknown, out: Set<string>): void => {
+  if (Array.isArray(value)) {
+    value.forEach((v) => collectFileIds(v, out));
+  } else if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (obj.fileId !== undefined) out.add(String(obj.fileId));
+    Object.values(obj).forEach((v) => collectFileIds(v, out));
+  }
+};
+
+// Best-effort human title for an entry: a string `title`/`name` field, else
+// the content type's display name plus id.
+const entryTitle = (
+  entry: Record<string, unknown>,
+  attributes: Attributes,
+  displayName: string
+): string => {
+  for (const field of ['title', 'name']) {
+    if (attributes[field]?.type === 'string' && typeof entry[field] === 'string' && entry[field]) {
+      return entry[field] as string;
+    }
+  }
+  return `${displayName} #${entry.id}`;
+};
+
 const service = ({ strapi }: { strapi: Core.Strapi }) => ({
   settingsStore() {
     return strapi.store({ type: 'plugin', name: 'kontainer' });
@@ -68,18 +104,32 @@ const service = ({ strapi }: { strapi: Core.Strapi }) => ({
     return url.replace(/\/+$/, '');
   },
 
-  async getSettings(): Promise<{ url: string; fileUrl: string }> {
+  async getSettings(): Promise<{ url: string; fileUrl: string; token: string }> {
     const stored = (await this.settingsStore().get({ key: 'settings' })) as {
       url?: string;
+      token?: string;
     } | null;
     return {
       url: stored?.url ?? '',
       fileUrl: strapi.plugin('kontainer').config('url', '') as string,
+      token: stored?.token ?? '',
     };
   },
 
-  async setSettings(settings: { url: string }): Promise<void> {
-    await this.settingsStore().set({ key: 'settings', value: settings });
+  // Bearer token Kontainer must send to the /file/usages endpoint.
+  async getUsageToken(): Promise<string> {
+    const stored = (await this.settingsStore().get({ key: 'settings' })) as {
+      token?: string;
+    } | null;
+    return stored?.token ?? '';
+  },
+
+  // Merge patch into stored settings so saving one field never wipes another.
+  async setSettings(patch: { url?: string; token?: string }): Promise<void> {
+    const current =
+      ((await this.settingsStore().get({ key: 'settings' })) as Record<string, unknown> | null) ??
+      {};
+    await this.settingsStore().set({ key: 'settings', value: { ...current, ...patch } });
   },
 
   // Is the URL an actual Kontainer instance? The picker entry point
@@ -192,6 +242,60 @@ const service = ({ strapi }: { strapi: Core.Strapi }) => ({
       }
     }
     return usage;
+  },
+
+  // All Kontainer file usages across every api content type, in the shape
+  // Kontainer's external-reference integration expects. One row per
+  // (file, document); url links to the entry in the admin content manager.
+  async findAllUsages(baseUrl: string): Promise<FileUsage[]> {
+    const base = baseUrl.replace(/\/+$/, '');
+    const seen = new Set<string>(); // `${fileId}::${documentId}`
+    const usages: FileUsage[] = [];
+
+    for (const [uid, contentType] of Object.entries(strapi.contentTypes)) {
+      if (!uid.startsWith('api::')) continue;
+      const attributes = contentType.attributes as Attributes;
+      const directFields = Object.entries(attributes)
+        .filter(([, attr]) => attr.customField === CUSTOM_FIELD)
+        .map(([name]) => name);
+      const populate = this.populateForAttributes(attributes);
+      const candidateFields = [...directFields, ...Object.keys(populate)];
+      if (!candidateFields.length) continue;
+
+      const displayName = (contentType.info?.displayName as string) ?? uid;
+
+      for (const status of ['draft', 'published'] as const) {
+        const pageSize = 500;
+        for (let start = 0; ; start += pageSize) {
+          const entries = await strapi.documents(uid as any).findMany({
+            status,
+            populate: populate as any,
+            locale: '*',
+            start,
+            limit: pageSize,
+          });
+          for (const entry of entries) {
+            const ids = new Set<string>();
+            for (const field of candidateFields) collectFileIds(entry[field], ids);
+            if (!ids.size) continue;
+
+            const url = `${base}/admin/content-manager/collection-types/${uid}/${entry.documentId}`;
+            const title = entryTitle(entry as Record<string, unknown>, attributes, displayName);
+
+            for (const fileId of ids) {
+              const numericId = Number(fileId);
+              if (!Number.isInteger(numericId)) continue; // Kontainer wants int ids
+              const key = `${fileId}::${entry.documentId}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              usages.push({ kontainerFileId: numericId, url, title });
+            }
+          }
+          if (entries.length < pageSize) break;
+        }
+      }
+    }
+    return usages;
   },
 });
 

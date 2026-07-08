@@ -18,10 +18,11 @@ the file. Kontainer stays the single source of truth.
     (`cf`) — stored in the JSON alongside the reference
 - **Download templates** — editors apply crop/resize/format templates directly
   in the picker; the resulting CDN URL and template id are stored.
-- **File usage endpoint** — `GET /api/kontainer/usage/:fileId` reports every
-  entry referencing a Kontainer file, across drafts, published versions,
-  locales, components and dynamic zones. Lets Kontainer show where a file is
-  used before it is changed or deleted.
+- **File usage tracking** — a `GET /api/kontainer/file/usages` endpoint that
+  Kontainer polls to show where each file is used. Register this Strapi instance
+  as an integration in Kontainer with the endpoint + a token (set the token
+  under **Settings → Kontainer**). Also `GET /api/kontainer/usage/:fileId`
+  reports usages for a single file (Strapi API token auth).
 - **No duplication** — nothing is uploaded to the Strapi media library.
 
 ## Requirements
@@ -94,26 +95,38 @@ const page = await fetch(`${STRAPI_URL}/api/pages/${documentId}`).then((r) => r.
 const { url, alt } = page.data.hero; // request the asset from Kontainer's CDN
 ```
 
-### File usage
+### File usage tracking
+
+Kontainer polls one endpoint that returns every Kontainer file usage across all
+content types (drafts + published, locales, components and dynamic zones):
+
+```
+GET /api/kontainer/file/usages
+Authorization: Bearer <token from Settings → Kontainer>
+
+{
+  "data": [
+    {
+      "kontainerFileId": 5764,
+      "url": "https://your-strapi/admin/content-manager/collection-types/api::demo-page.demo-page/m3q2h...",
+      "title": "Nordic Light"
+    }
+  ]
+}
+```
+
+To wire it up: open **Settings → Kontainer**, set (or **Generate**) a token, and
+register the shown endpoint URL + token as an integration in Kontainer
+(**Settings → Integrations**). No token configured → `403`; missing or wrong
+bearer token → `401`.
+
+There is also a per-file variant for programmatic checks (Strapi API token auth):
 
 ```
 GET /api/kontainer/usage/:fileId
 Authorization: Bearer <strapi api token>
 
-{
-  "fileId": "5764",
-  "count": 1,
-  "data": [
-    {
-      "contentType": "api::page.page",
-      "field": "hero",
-      "documentId": "m3q2h...",
-      "id": 1,
-      "locale": null,
-      "status": "published"
-    }
-  ]
-}
+{ "fileId": "5764", "count": 1, "data": [ { "contentType": "api::demo-page.demo-page", "field": "hero", "documentId": "m3q2h...", "id": 1, "locale": null, "status": "published" } ] }
 ```
 
 ## Development

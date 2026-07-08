@@ -11,12 +11,19 @@ type Validation = { status: 'idle' | 'checking' | 'valid' } | { status: 'invalid
 
 const VALIDATION_DEBOUNCE_MS = 500;
 
+// A strong random token to register on the Kontainer integration.
+const generateToken = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(24)))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
 const Settings = () => {
   const { formatMessage } = useIntl();
   const { get, put } = useFetchClient();
   const { toggleNotification } = useNotification();
   const [url, setUrl] = React.useState('');
   const [fileUrl, setFileUrl] = React.useState('');
+  const [token, setToken] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [validation, setValidation] = React.useState<Validation>({ status: 'idle' });
@@ -24,9 +31,10 @@ const Settings = () => {
 
   React.useEffect(() => {
     get('/kontainer/settings')
-      .then(({ data }: { data: { url: string; fileUrl: string } }) => {
+      .then(({ data }: { data: { url: string; fileUrl: string; token: string } }) => {
         setUrl(data.url);
         setFileUrl(data.fileUrl);
+        setToken(data.token);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -63,7 +71,7 @@ const Settings = () => {
   const save = async () => {
     setSaving(true);
     try {
-      await put('/kontainer/settings', { url: url.trim() });
+      await put('/kontainer/settings', { url: url.trim(), token: token.trim() });
       toggleNotification({
         type: 'success',
         message: formatMessage({
@@ -83,6 +91,23 @@ const Settings = () => {
       setSaving(false);
     }
   };
+
+  const copy = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toggleNotification({
+        type: 'success',
+        message: formatMessage({
+          id: getTranslation('settings.copied'),
+          defaultMessage: 'Copied to clipboard',
+        }),
+      });
+    } catch {
+      // clipboard blocked (e.g. insecure context) — user can still select manually
+    }
+  };
+
+  const usageEndpoint = `${window.location.origin}/api/kontainer/file/usages`;
 
   const invalidMessage = (reason: string) =>
     formatMessage({
@@ -159,6 +184,85 @@ const Settings = () => {
           )}
           <Field.Hint />
           <Field.Error />
+        </Field.Root>
+        <Flex direction="column" alignItems="flex-start" gap={1} width="100%">
+          <Typography variant="delta" tag="h2">
+            {formatMessage({
+              id: getTranslation('settings.usage.title'),
+              defaultMessage: 'File usage tracking',
+            })}
+          </Typography>
+          <Typography variant="pi" textColor="neutral600">
+            {formatMessage({
+              id: getTranslation('settings.usage.subtitle'),
+              defaultMessage:
+                'To sync where files are used, register this Strapi instance in Kontainer (Settings → Integrations): copy the endpoint and token below into a new integration there.',
+            })}
+          </Typography>
+        </Flex>
+        <Field.Root
+          name="kontainer-usage-endpoint"
+          hint={formatMessage({
+            id: getTranslation('settings.usage.endpoint.hint'),
+            defaultMessage: 'Paste this as the integration endpoint in Kontainer (GET).',
+          })}
+          style={{ width: '100%' }}
+        >
+          <Field.Label>
+            {formatMessage({
+              id: getTranslation('settings.usage.endpoint.label'),
+              defaultMessage: 'Usage endpoint URL',
+            })}
+          </Field.Label>
+          <Flex gap={2} width="100%">
+            <Box flex="1">
+              <TextInput value={usageEndpoint} aria-readonly readOnly />
+            </Box>
+            <Button variant="tertiary" onClick={() => copy(usageEndpoint)}>
+              {formatMessage({ id: getTranslation('settings.copy'), defaultMessage: 'Copy' })}
+            </Button>
+          </Flex>
+          <Field.Hint />
+        </Field.Root>
+        <Field.Root
+          name="kontainer-token"
+          hint={formatMessage({
+            id: getTranslation('settings.usage.token.hint'),
+            defaultMessage:
+              'Bearer token Kontainer must send. Use the same value on the Kontainer integration. Leave empty to disable the endpoint.',
+          })}
+          style={{ width: '100%' }}
+        >
+          <Field.Label>
+            {formatMessage({
+              id: getTranslation('settings.usage.token.label'),
+              defaultMessage: 'Usage endpoint token',
+            })}
+          </Field.Label>
+          <Flex gap={2} width="100%">
+            <Box flex="1">
+              <TextInput
+                placeholder="a long random secret"
+                value={token}
+                disabled={loading}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value)}
+              />
+            </Box>
+            <Button
+              variant="secondary"
+              disabled={loading}
+              onClick={() => setToken(generateToken())}
+            >
+              {formatMessage({
+                id: getTranslation('settings.usage.token.generate'),
+                defaultMessage: 'Generate',
+              })}
+            </Button>
+            <Button variant="tertiary" disabled={loading || !token} onClick={() => copy(token)}>
+              {formatMessage({ id: getTranslation('settings.copy'), defaultMessage: 'Copy' })}
+            </Button>
+          </Flex>
+          <Field.Hint />
         </Field.Root>
         <Button onClick={save} loading={saving} disabled={loading} startIcon={<Check />}>
           {formatMessage({
